@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -10,6 +12,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+
+	"github.com/auth0-community/auth0"
+	jose "gopkg.in/square/go-jose.v2"
 )
 
 // Product ontain the information about VR experiences
@@ -49,9 +54,13 @@ func main() {
 	// The custom handler 'NotImplemented' should be implemented
 	r.Handle("/status", StatusHandler).Methods("GET")
 
-	// Add Middleware for authentication of APIs
-	r.Handle("/products", jwtMiddleware.Handler(ProductHandler)).Methods("GET")
-	r.Handle("/products/{slug}/feedback", jwtMiddleware.Handler(AddFeedbackHandler)).Methods("POST")
+	// Add Middleware for authentication of APIs via locally generate JWT & go-jwt-middleware
+	//r.Handle("/products", jwtMiddleware.Handler(ProductHandler)).Methods("GET")
+	//r.Handle("/products/{slug}/feedback", jwtMiddleware.Handler(AddFeedbackHandler)).Methods("POST")
+
+	// Add Middleware for authentication of APIs via Auth0 and jose
+	r.Handle("/products", authMiddleware(ProductHandler)).Methods("GET")
+	r.Handle("/products/{slug}/feedback", authMiddleware(AddFeedbackHandler)).Methods("POST")
 
 	// Create a route to generate new JWT
 	r.Handle("/get-token", GetTokenHandler).Methods("GET")
@@ -60,6 +69,44 @@ func main() {
 	// This is the default handler which will display logging info on terminal
 	http.ListenAndServe(":3000", handlers.LoggingHandler(os.Stdout, r))
 
+}
+
+// Add the authentication middleware
+// This will validate the JWT provided as Authorization header
+func authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// This is the secret used to sign the JWT when algorithm is HS256
+		base64SigningSecret := "Base64EncodedSigningKey"
+
+		// This is the audience/identifier of the API
+		aud := "audienceORidentifier"
+
+		// domain to validate the JWT
+		domain := "https://{mydomain}.auth0.com/"
+
+		// algorithm to sign JWT
+		alg := jose.HS256
+
+		audience := []string{aud}
+		secret, _ := base64.URLEncoding.DecodeString(base64SigningSecret)
+		secretProvider := auth0.NewKeyProvider(secret)
+
+		configuration := auth0.NewConfiguration(secretProvider, audience, domain, alg)
+
+		validator := auth0.NewValidator(configuration, nil)
+
+		token, err := validator.ValidateRequest(r)
+
+		if err != nil {
+			fmt.Println(err)
+			fmt.Println("Token is not valid:", token)
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("Unauthorized"))
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
 }
 
 // NotImplemented is the Custom Handler
