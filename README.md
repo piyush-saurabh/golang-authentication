@@ -35,6 +35,29 @@ var StatusHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 })
 ```
 
+### Send response from handler
+```go
+var ProductHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	// Convert slice into JSON
+	payload, _ := json.Marshal(products)
+
+	// Set the application response header
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(payload))
+})
+```
+
+### Read URL Parameters in handler
+
+```go
+r.Handle("/products/{slug}/feedback", NotImplemented).Methods("POST")
+	vars := mux.Vars(r)
+	slug := vars["slug"]
+```
+
+
+
 ### Create a authentication middleware
 
 ```go
@@ -55,6 +78,8 @@ func authMiddleware(next http.Handler) http.Handler {
     })
 }
 ```
+
+
 
 ## Go packages used
 
