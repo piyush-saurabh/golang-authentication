@@ -1,5 +1,5 @@
 # Authentication in Golang
-Build a REST API in golang and protect them with authentication and authorization using OAuth
+Build a REST API in golang and protect them with authentication using OAuth
 
 Ref: https://auth0.com/blog/authentication-in-golang/
 
@@ -88,5 +88,6 @@ func authMiddleware(next http.Handler) http.Handler {
 | gorilla/mux | Web Application Framework
 |dgrijalva/jwt-go | Creating new JWT
 | gopkg.in/square/go-jose.v2 | For working with OAuth2
+| github.com/auth0-community/auth0 | Validating JWT generated if Auth0 is used as Authorization Server
 
 
