@@ -79,6 +79,24 @@ func authMiddleware(next http.Handler) http.Handler {
 }
 ```
 
+### Create JWT Token
+Use github.com/dgrijalva/jwt-go package
+```go
+token := jwt.New(jwt.SigningMethodHS256)
+
+// Add claims
+claims := token.Claims.(jwt.MapClaims)
+claims["name"] = "Rogue Security"
+claims["aud"] = "microserivce-1"
+
+// Sign the token with the secret
+tokenString, _ := token.SignedString("secretkey")
+
+// Return back the token
+w.Write([]byte(tokenString))
+})
+```
+
 
 
 ## Go packages used
