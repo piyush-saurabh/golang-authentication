@@ -95,7 +95,6 @@ tokenString, _ := token.SignedString("secretkey")
 
 // Return back the token
 w.Write([]byte(tokenString))
-})
 ```
 
 ### Verify JWT using middleware
