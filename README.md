@@ -81,6 +81,7 @@ func authMiddleware(next http.Handler) http.Handler {
 
 ### Create JWT Token
 Use github.com/dgrijalva/jwt-go package
+
 ```go
 token := jwt.New(jwt.SigningMethodHS256)
 
@@ -94,6 +95,17 @@ tokenString, _ := token.SignedString("secretkey")
 
 // Return back the token
 w.Write([]byte(tokenString))
+})
+```
+
+### Verify JWT using middleware
+
+```go
+var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+		return jwtSigningKey, nil
+	},
+	SigningMethod: jwt.SigningMethodHS256,
 })
 ```
 
